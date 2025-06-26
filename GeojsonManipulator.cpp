@@ -27,11 +27,14 @@ int main(int argc, char* argv[])
 
     for (auto& asset:inputJson) {
 
+        double lon = asset["lon"].is_string() ? std::stod(asset["lon"].get<std::string>()) : asset["lon"].get<double>();
+        double lat = asset["lat"].is_string() ? std::stod(asset["lat"].get<std::string>()) : asset["lat"].get<double>();
+
         json feature;
         feature["type"] = "Feature";
         feature["geometry"] = {
             {"type", "Point"},
-            {"coordinates", {asset["lon"], asset["lat"]}}
+            {"coordinates", {std::stod(asset["lon"].get<std::string>()), std::stod(asset["lat"].get<std::string>())}}
         };
 
         json properties;
