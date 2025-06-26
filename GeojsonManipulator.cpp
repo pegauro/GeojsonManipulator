@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
         feature["type"] = "Feature";
         feature["geometry"] = {
             {"type", "Point"},
-            {"coordinates", {std::stod(asset["lon"].get<std::string>()), std::stod(asset["lat"].get<std::string>())}}
+            {"coordinates", {lon, lat}}
         };
 
         json properties;
@@ -177,6 +177,6 @@ int main(int argc, char* argv[])
     outFile << "\n]}";
     outFile.close();
 
-    std::cout << "GeoJSON written to " << argv[2] << "!";
+    std::cout << argv[1] << " converted to " << argv[2] << "!\n";
     return 0;
 }
