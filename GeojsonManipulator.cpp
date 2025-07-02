@@ -39,7 +39,6 @@ int main(int argc, char* argv[])
 
         json properties;
         for (auto& prop:asset.items()) {
-            std::cout << prop.key() << ": " << prop.value() << std::endl;
                 properties[prop.key()] = prop.value();
 
                 const std::string& key = prop.key();
