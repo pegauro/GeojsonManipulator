@@ -39,6 +39,7 @@ int main(int argc, char* argv[])
 
         json properties;
         for (auto& prop:asset.items()) {
+            std::cout << prop.key() << ": " << prop.value() << std::endl;
                 properties[prop.key()] = prop.value();
 
                 const std::string& key = prop.key();
@@ -90,17 +91,33 @@ int main(int argc, char* argv[])
 
                 if (key == "tmin" && prop.value().is_array()) {
                     int i = 0;
-                    for (auto& val : prop.value()) {
-                        properties["tmin" + std::to_string(i)] = val[4].is_null() ? json(0) : val[4];
-                        i++;
+                    if (prop.value()[0].is_array()) {
+                        for (auto& val : prop.value()) {
+                            properties["tmin" + std::to_string(i)] = val[4].is_null() ? json(0) : val[4];
+                            i++;
+                        }
+                    }
+                    else {
+                        for (auto& val : prop.value()) {
+                            properties["tmin" + std::to_string(i)] = val.is_null() ? json(0) : val;
+                            i++;
+                        }
                     }
                 }
 
                 if (key == "tmax" && prop.value().is_array()) {
                     int i = 0;
-                    for (auto& val : prop.value()) {
-                        properties["tmax" + std::to_string(i)] = val[4].is_null() ? json(0) : val[4];
-                        i++;
+                    if (prop.value()[0].is_array()) {
+                        for (auto& val : prop.value()) {
+                            properties["tmax" + std::to_string(i)] = val[4].is_null() ? json(0) : val[4];
+                            i++;
+                        }
+                    }
+                    else {
+                        for (auto& val : prop.value()) {
+                            properties["tmax" + std::to_string(i)] = val.is_null() ? json(0) : val;
+                            i++;
+                        }
                     }
                 }
 
