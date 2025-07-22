@@ -1,13 +1,30 @@
 #include <iostream>
 #include <fstream>
 #include "json.hpp"
+#include <math.h>
 
 using json = nlohmann::json;
 
+bool isAJsonFile(const std::string& filename) {
+    if (filename.length() < 6) return false;
+
+    std::string extension = filename.substr(filename.length() - 5);
+
+    return extension == ".json";
+}
+
+bool isAGeojsonFile(const std::string& filename) {
+    if (filename.length() < 9) return false;
+
+    std::string extension = filename.substr(filename.length() - 8);
+
+    return extension == ".geojson";
+}
+
 int main(int argc, char* argv[])
 {
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " <input.geojson> <output.gejson>\n";
+    if (argc < 3 || !isAJsonFile(argv[1]) || !isAGeojsonFile(argv[2])) {
+        std::cerr << "Usage: " << argv[0] << " <input.json> <output.geojson>\n";
         return 1;
     }
 
@@ -25,8 +42,14 @@ int main(int argc, char* argv[])
 
     bool first = true;
 
-    for (auto& asset:inputJson) {
+    std::cout << "Converting " << argv[1] << " to " << argv[2] << ":\n";
 
+    double currentAsset = 0;
+    double totalOfAssets = inputJson.size();
+
+    std::cout << "0 %";
+
+    for (auto& asset:inputJson) {
         double lon = asset["lon"].is_string() ? std::stod(asset["lon"].get<std::string>()) : asset["lon"].get<double>();
         double lat = asset["lat"].is_string() ? std::stod(asset["lat"].get<std::string>()) : asset["lat"].get<double>();
 
@@ -180,6 +203,36 @@ int main(int argc, char* argv[])
                         }
                     }
                 }
+
+                if (key == "soy_data")
+                {
+                    for (int i = 0; i < properties["soy_data"]["forecast"]["risk"].size(); i++) {
+                        properties["soy_forecast_risk" + std::to_string(i)] = properties["soy_data"]["forecast"]["risk"][i];
+                    }
+
+                    for (int i = 0; i < properties["soy_data"]["historical"]["risk"].size(); i++) {
+                        properties["soy_historical_risk" + std::to_string(i)] = properties["soy_data"]["historical"]["risk"][i];
+                    }
+
+                    for (int i = 0; i < properties["soy_data"]["monitoring"]["risk"].size(); i++) {
+                        properties["soy_monitoring_risk" + std::to_string(i)] = properties["soy_data"]["monitoring"]["risk"][i];
+                    }
+                }
+
+                if (key == "corn_data")
+                {
+                    for (int i = 0; i < properties["corn_data"]["forecast"]["risk"].size(); i++) {
+                        properties["corn_forecast_risk" + std::to_string(i)] = properties["corn_data"]["forecast"]["risk"][i];
+                    }
+
+                    for (int i = 0; i < properties["corn_data"]["historical"]["risk"].size(); i++) {
+                        properties["corn_historical_risk" + std::to_string(i)] = properties["corn_data"]["historical"]["risk"][i];
+                    }
+
+                    for (int i = 0; i < properties["corn_data"]["monitoring"]["risk"].size(); i++) {
+                        properties["corn_monitoring_risk" + std::to_string(i)] = properties["corn_data"]["monitoring"]["risk"][i];
+                    }
+                }
         }
 
         feature["properties"] = properties;
@@ -188,11 +241,18 @@ int main(int argc, char* argv[])
         first = false;
 
         outFile << feature.dump(-1);
+
+        currentAsset++;
+        double finalPercent = ceil((currentAsset / totalOfAssets) * 100);
+
+        std::cout << "\r";
+        std::cout << finalPercent << " %";
+        std::cout.flush();
     }
 
     outFile << "\n]}";
     outFile.close();
 
-    std::cout << argv[1] << " converted to " << argv[2] << "!\n";
+    std::cout << "\n" << argv[1] << " converted to " << argv[2] << "!\n";
     return 0;
 }
