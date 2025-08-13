@@ -35,19 +35,19 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    std::cout << "Converting " << argv[1] << " to " << argv[2] << ":\n";
+
+    std::cout << "0 %";
+
     json inputJson = json::parse(inputFile);
 
     std::ofstream outFile(argv[2]);
     outFile << "{ \"type\": \"FeatureCollection\", \"features\": [\n";
 
-    bool first = true;
-
-    std::cout << "Converting " << argv[1] << " to " << argv[2] << ":\n";
+    bool first = true;    
 
     double currentAsset = 0;
     double totalOfAssets = inputJson.size();
-
-    std::cout << "0 %";
 
     for (auto& asset:inputJson) {
         double lon = asset["lon"].is_string() ? std::stod(asset["lon"].get<std::string>()) : asset["lon"].get<double>();
@@ -66,140 +66,22 @@ int main(int argc, char* argv[])
 
                 const std::string& key = prop.key();
 
-                if (key == "risk9" && properties["risk9"].is_array()) {
-                    for (int i = 0; i < 10; i++) {
-                        std::string riskKey = "risk" + std::to_string(i);
-                        if (properties.contains(riskKey) && properties[riskKey].is_array()) {
-                            int j = 0;
-                            for (auto& val : properties[riskKey]) {
-                                properties[riskKey + std::to_string(j)] = val;
-                                j++;
+                if (key != "soy_data" && key != "corn_data" && key != "rundates" && properties[key].is_array())
+                {
+                    for (int i = 0;i < properties[key].size();i++)
+                    {
+                        if (properties[key][i].is_array())
+                        {
+                            for (int j = 0;j < properties[key][i].size();j++)
+                            {
+                                std::string newKey = key + std::to_string(i) + std::to_string(j);
+                                properties[newKey] = properties[key][i][j].is_null() ? json(0) : properties[key][i][j];
                             }
                         }
-                    }
-                }
-
-                if (key == "rain" && prop.value().is_array()) {
-                    int i = 0;
-                    if (prop.value()[0].is_array()) {
-                        for (auto& val : prop.value()) {
-                            properties["rain" + std::to_string(i)] = val[4].is_null() ? json(0) : val[4];
-                            i++;
-                        }
-                    }
-                    else {
-                        for (auto& val : prop.value()) {
-                            properties["rain" + std::to_string(i)] = val.is_null() ? json(0) : val;
-                            i++;
-                        }
-                    }
-                }
-
-                if (key == "wind" && prop.value().is_array()) {
-                    int i = 0;
-                    if (prop.value()[0].is_array()) {
-                        for (auto& val : prop.value()) {
-                            properties["wind" + std::to_string(i)] = val[4].is_null() ? json(0) : val[4];
-                            i++;
-                        }
-                    }
-                    else {
-                        for (auto& val : prop.value()) {
-                            properties["wind" + std::to_string(i)] = val.is_null() ? json(0) : val;
-                            i++;
-                        }
-                    }
-                }
-
-                if (key == "tmin" && prop.value().is_array()) {
-                    int i = 0;
-                    if (prop.value()[0].is_array()) {
-                        for (auto& val : prop.value()) {
-                            properties["tmin" + std::to_string(i)] = val[4].is_null() ? json(0) : val[4];
-                            i++;
-                        }
-                    }
-                    else {
-                        for (auto& val : prop.value()) {
-                            properties["tmin" + std::to_string(i)] = val.is_null() ? json(0) : val;
-                            i++;
-                        }
-                    }
-                }
-
-                if (key == "tmax" && prop.value().is_array()) {
-                    int i = 0;
-                    if (prop.value()[0].is_array()) {
-                        for (auto& val : prop.value()) {
-                            properties["tmax" + std::to_string(i)] = val[4].is_null() ? json(0) : val[4];
-                            i++;
-                        }
-                    }
-                    else {
-                        for (auto& val : prop.value()) {
-                            properties["tmax" + std::to_string(i)] = val.is_null() ? json(0) : val;
-                            i++;
-                        }
-                    }
-                }
-
-                if (key == "flood" && prop.value().is_array()) {
-                    if (prop.value().size() > 0 && prop.value().size() != 5) {
-                        int i = 0;
-                        for (auto& val : prop.value()) {
-                            properties["flood" + std::to_string(i)] = val.is_null() ? json(0) : val;
-                            i++;
-                        }
-                    }
-                    else {
-                        properties["flood0"] = prop.value().size() > 4 ? (prop.value()[4].is_null() ? json(0) : prop.value()[4]) : json(0);
-                    }
-                }
-
-                std::vector<std::string> flatKeys = {
-                    "fire", "pollution", "therm_confort", "landslide", "spi", "ivsc",
-                    "rainpoles", "windpoles", "tminpoles", "tmaxpoles"
-                };
-
-                for (const std::string& k : flatKeys) {
-                    if (key == k && prop.value().is_array()) {
-                        int i = 0;
-                        for (auto& val : prop.value()) {
-                            properties[k + std::to_string(i)] = val.is_null() ? json(0) : val;
-                            i++;
-                        }
-                    }
-                }
-
-                if (key == "shortWind0" && prop.value().is_array()) {
-                    for (int i = 0; i < prop.value().size(); i++) {
-                        properties["shortWind0" + std::to_string(i)] = prop.value()[i];  
-                    }
-                }
-
-                if (key == "shortRain0" && prop.value().is_array()) {
-                    for (int i = 0; i < prop.value().size(); i++) {
-                        properties["shortRain0" + std::to_string(i)] = prop.value()[i];
-                    }
-                }
-
-                if (key == "shortFlood0" && prop.value().is_array()) {
-                    for (int i = 0; i < prop.value().size(); i++) {
-                        properties["shortFlood0" + std::to_string(i)] = prop.value()[i];
-                    }
-                }
-
-                std::vector<std::string> shortVars = {
-                    "shortRain", "shortWind", "shortFlood", "shortPollution",
-                    "shortFire", "shortTherm_confort", "shortSpi", "shortLandslide"
-                };
-
-                for (const std::string& k : shortVars) {
-                    if (key == k && prop.value().is_array()) {
-                        int i = 0;
-                        for (auto& val : prop.value()) {
-                            properties[k + std::to_string(i)] = val.is_null() ? json(0) : val;
-                            i++;
+                        else 
+                        {
+                            std::string newKey = key + std::to_string(i);
+                            properties[newKey] = properties[key][i].is_null() ? json(0) : properties[key][i];
                         }
                     }
                 }
